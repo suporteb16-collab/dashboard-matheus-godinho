@@ -127,6 +127,19 @@ html.dark .kpi.hero .foot{color:var(--muted)}
   .ft-cost-lbl,.ft-name{font-size:9px}
 }
 
+/* Card de ação — um por frente (DR / Quiz / Webinário). A ação sem dado fica
+   visível e apagada: o vazio é informação (não subiu ainda), não um erro. */
+.acao{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:15px 17px 14px; box-shadow:var(--shadow)}
+.acao.off{border-style:dashed; box-shadow:none; background:var(--surface2)}
+.acao-top{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:11px}
+.acao-top h3{font-size:15px; font-weight:700; margin:0; color:var(--black)}
+.acao-tag{font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); border:1px solid var(--border2); border-radius:20px; padding:2px 9px; white-space:nowrap}
+.acao-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(88px,1fr)); gap:11px 13px}
+.acao-grid .lab{font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:500; display:block; margin-bottom:3px}
+.acao-grid .v{font-size:19px; font-weight:700; line-height:1.1; color:var(--black); font-variant-numeric:tabular-nums}
+.acao-vazio{color:var(--muted); font-size:13px; padding:6px 0 2px}
+.acao-pend{font-size:12px; color:var(--muted); margin-top:11px; padding-top:10px; border-top:1px dashed var(--border2)}
+
 .tw{overflow-x:auto; border:1px solid var(--border); border-radius:10px; background:var(--surface); box-shadow:var(--shadow)}
 table{border-collapse:collapse; width:100%; font-size:13px; min-width:560px}
 th,td{padding:9px 13px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap}
@@ -157,7 +170,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
         </div>
       </div>
       <div class="sub">
-        Conta <b>CA - FAD - Prime</b> · todas as campanhas da conta
+        Conta <b>CA - FAD - Prime</b> · por ação: <b>Direct Response</b> · <b>Quiz</b> · <b>Webinário</b>
       </div>
     </div>
     <div class="tools">
@@ -187,9 +200,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
     <section>
       <div class="sec-head"><h2>Resultado de mídia</h2><span class="hint" id="janela-txt"></span></div>
       <div class="note info"><span class="ic">●</span><div>
-        <b>Este dashboard mostra só investimento em mídia</b> — ainda não há fonte de vendas
-        conectada para este cliente. Assim que os dados de compra (Kiwify) estiverem
-        disponíveis, ROAS, ticket médio e funil até a venda entram aqui.</div></div>
+        <b>Os números de venda ainda vêm do pixel da Meta, não da Kiwify.</b> A estrutura
+        das 3 ações (Direct Response · Quiz · Webinário) e dos 3 produtos ODV já está
+        montada — assim que a Kiwify do Matheus entrar na sincronização da B16, ROAS,
+        ticket e faturamento real preenchem sozinhos.</div></div>
       <div class="kpis">
         <div class="kpi hero">
           <span class="lab">Investimento total</span>
@@ -201,6 +215,21 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
         <div class="kpi"><span class="lab">Compras (pixel)</span><div class="val sm" id="k-compras">—</div><div class="foot" id="k-compras-foot">—</div></div>
         <div class="kpi"><span class="lab">Faturamento (pixel)</span><div class="val sm" id="k-fatpixel">—</div><div class="foot" id="k-fatpixel-foot">—</div></div>
       </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Por ação</h2><span class="hint">Direct Response · Quiz · Webinário</span></div>
+      <div id="acoes-box" class="grid g2"></div>
+      <div class="card" style="margin-top:14px">
+        <h3>Investimento por ação, ao longo do tempo</h3>
+        <p class="cap">Quanto cada frente consumiu de mídia por dia.</p>
+        <div class="plot"><canvas id="c-acao-dia"></canvas></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><h2>Produtos</h2><span class="hint">Kiwify — venda confirmada</span></div>
+      <div id="produtos-box"></div>
     </section>
 
     <section>
@@ -283,7 +312,20 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
 /* ======================= CONFIG ======================= */
 const SB_URL = 'https://afmisfmhfloabudcajbh.supabase.co/rest/v1';
 const SB_KEY = 'sb_publishable_eNNYTx-b4zWWjM8A7XuI5Q_SqcBW7tL';
-const V_MIDIA = 'dash_mgodinho_midia';
+const V_MIDIA  = 'dash_mgodinho_midia_acao';
+const V_VENDAS = 'dash_mgodinho_vendas';
+
+/* As 3 ações definidas pelo cliente em 10/09/2026. A ordem aqui é a ordem em que
+   aparecem na tela. "Webinário" fica visível mesmo sem campanha ativa — o vazio é
+   informação (a ação ainda não subiu), diferente de sumir da tela. */
+const ACOES = ['Direct Response', 'Quiz', 'Webinário'];
+
+/* Preço de tabela dos produtos ODV (referência para ticket e break-even). */
+const PRODUTOS = [
+  { nome:'Onda de Vendas',        preco:297 },
+  { nome:'Lista de Fornecedores', preco:97  },
+  { nome:'Calculadora',           preco:97  },
+];
 
 /* ======================= UTIL ======================= */
 const $  = s => document.querySelector(s);
@@ -343,10 +385,11 @@ const rotulos = {
       const meta = ch.getDatasetMeta(di); if (meta.hidden) return;
       meta.data.forEach((el, i) => {
         const v = ds.data[i]; if (v == null || v === 0) return;
+        const txt = fmt(v, di); if (txt === '' || txt == null) return;
         const horiz = ch.options.indexAxis === 'y';
         ctx.textAlign = horiz ? 'left' : 'center';
         ctx.textBaseline = horiz ? 'middle' : 'bottom';
-        ctx.fillText(fmt(v, di), el.x + (horiz ? 6 : 0), el.y + (horiz ? 0 : -4));
+        ctx.fillText(txt, el.x + (horiz ? 6 : 0), el.y + (horiz ? 0 : -4));
       });
     });
     ctx.restore();
@@ -376,7 +419,7 @@ const BASE = { responsive:true, maintainAspectRatio:false, animation:{duration:2
 const barra = { borderRadius:4, borderSkipped:false, borderWidth:2, maxBarThickness:38 };
 
 /* ======================= RENDER ======================= */
-let MIDIA = [];
+let MIDIA = [], VENDAS = [];
 
 function render(){
   const seg = ($('.seg button[aria-pressed="true"]')||{}).dataset?.range || 'all';
@@ -466,6 +509,89 @@ function render(){
     </div>`;
   }).join('') + '</div>';
 
+  /* ---- por ação ---- */
+  const vendas = (de||ate) ? VENDAS.filter(v => dentro(v.dia)) : VENDAS;
+  const vendasPagas = vendas.filter(v => v.status === 'paid');
+
+  $('#acoes-box').innerHTML = ACOES.map(acao => {
+    const mm = midia.filter(m => m.acao === acao);
+    const gasto = soma(mm, m => m.gasto);
+    const vv = vendasPagas.filter(v => v.acao === acao);
+    const fat = soma(vv, v => v.faturamento);
+
+    if (!mm.length && !vv.length){
+      return `<div class="acao off">
+        <div class="acao-top"><h3>${esc(acao)}</h3><span class="acao-tag">sem dado</span></div>
+        <div class="acao-vazio">Nenhuma campanha nem venda registrada${
+          (de||ate) ? ' neste período' : ' ainda'}.</div></div>`;
+    }
+
+    const ck = soma(mm, m => m.checkouts);
+    const cpx = soma(mm, m => m.compras_pixel);
+    /* ROAS só sai quando há venda confirmada na Kiwify. Com a fonte de vendas
+       ausente, mostrar ROAS do pixel seria inventar faturamento. */
+    const temVenda = vv.length > 0;
+    return `<div class="acao">
+      <div class="acao-top"><h3>${esc(acao)}</h3>
+        <span class="acao-tag">${mm.length ? esc(pctFino(gasto, inv)) + ' do investimento' : 'sem mídia'}</span></div>
+      <div class="acao-grid">
+        <div><span class="lab">Investido</span><div class="v">${esc(brlCurto(gasto))}</div></div>
+        <div><span class="lab">Cliques</span><div class="v">${soma(mm,m=>m.cliques).toLocaleString('pt-BR')}</div></div>
+        <div><span class="lab">Checkouts</span><div class="v">${ck.toLocaleString('pt-BR')}</div></div>
+        <div><span class="lab">${temVenda ? 'Vendas' : 'Compras (pixel)'}</span><div class="v">${
+          temVenda ? vv.length.toLocaleString('pt-BR') : Math.round(cpx).toLocaleString('pt-BR')}</div></div>
+        <div><span class="lab">${temVenda ? 'Faturamento' : 'CPA (pixel)'}</span><div class="v">${
+          esc(temVenda ? brlCurto(fat) : nOrDash(div(gasto, cpx), brl))}</div></div>
+        <div><span class="lab">ROAS</span><div class="v">${
+          esc(temVenda ? (fat/gasto).toLocaleString('pt-BR',{maximumFractionDigits:2}) + '×' : '—')}</div></div>
+      </div>
+      ${temVenda ? '' : '<div class="acao-pend">ROAS e faturamento entram quando a venda da Kiwify for conectada.</div>'}
+    </div>`;
+  }).join('');
+
+  /* investimento por ação ao longo do tempo */
+  const diasA = [...new Set(midia.map(m => m.dia).filter(Boolean))].sort();
+  const acoesComGasto = ACOES.filter(a => midia.some(m => m.acao === a && m.gasto));
+  desenhar('c-acao-dia', {
+    type:'bar',
+    data:{ labels:diasA.map(dataBR), datasets: acoesComGasto.map((a, i) => ({
+      label:a, data:diasA.map(d => soma(midia.filter(m => m.dia===d && m.acao===a), m=>m.gasto)),
+      backgroundColor:css(i === 0 ? '--cat1' : '--cat2'), borderColor:css('--surface'), ...barra,
+    }))},
+    options:{ ...BASE, scales:{ ...eixos({moeda:true}), x:{ ...eixos().x, stacked:true },
+        y:{ ...eixos({moeda:true}).y, stacked:true } },
+      plugins:{ legend:{ display:true, position:'top', labels:{ color:css('--muted'),
+        font:{ family:'"DM Sans", system-ui, sans-serif', size:12 } } },
+        tooltip: tooltip(c => `${c.dataset.label}: ${brl(c.parsed.y)}`),
+        /* sem rótulo por barra: são 2 séries empilhadas em ~60 dias — o número
+           direto vira ruído ilegível. A leitura fica no eixo e no tooltip. */
+        rotulos:{ fmt: () => '' } } },
+  });
+
+  /* ---- produtos ---- */
+  const gp = agrupar(vendasPagas, v => v.produto_curto);
+  const linhasProd = PRODUTOS.map(p => {
+    const vv = gp.get(p.nome) || [];
+    return { ...p, n:vv.length, fat: soma(vv, v => v.faturamento) };
+  });
+  const temAlgumaVenda = linhasProd.some(p => p.n > 0);
+  $('#produtos-box').innerHTML = temAlgumaVenda
+    ? `<div class="tw"><table>
+        <thead><tr><th>Produto</th><th class="n">Preço</th><th class="n">Vendas</th><th class="n">Faturamento</th><th class="n">Ticket médio</th></tr></thead>
+        <tbody>${linhasProd.map(p => `<tr>
+          <td class="wrap-ok">${esc(p.nome)}</td>
+          <td class="n">${esc(brl(p.preco))}</td>
+          <td class="n">${p.n.toLocaleString('pt-BR')}</td>
+          <td class="n">${esc(brl(p.fat))}</td>
+          <td class="n">${esc(nOrDash(div(p.fat, p.n), brl))}</td>
+        </tr>`).join('')}</tbody></table></div>`
+    : `<div class="note warn"><span class="ic">▲</span><div>
+        <b>Nenhuma venda dos produtos ODV chegou à base ainda.</b> Os 3 produtos
+        (Onda de Vendas R$ 297 · Lista de Fornecedores R$ 97 · Calculadora R$ 97)
+        estão mapeados e a consulta já está pronta — falta a Kiwify do Matheus entrar
+        na sincronização da B16. Enquanto isso, os números de compra nesta página vêm
+        do pixel da Meta e tendem a superestimar.</div></div>`;
+
   /* ---- evolução ---- */
   const gastoDia = agrupar(midia, m => m.dia);
   const diasG = [...gastoDia.keys()].sort();
@@ -547,7 +673,13 @@ async function boot(){
   $('#loading').classList.remove('hidden');
   $('#erro').classList.add('hidden');
   try {
-    MIDIA = await sb(V_MIDIA, 'select=*&order=dia.asc&limit=5000');
+    /* A view de vendas hoje volta vazia (Kiwify do Matheus ainda não sincroniza).
+       Falha nela não pode derrubar o dashboard de mídia, que é o que está no ar. */
+    const [midia, vendas] = await Promise.all([
+      sb(V_MIDIA, 'select=*&order=dia.asc&limit=5000'),
+      sb(V_VENDAS, 'select=*&order=dia.asc&limit=5000').catch(e => { console.warn('vendas:', e.message); return []; }),
+    ]);
+    MIDIA = midia; VENDAS = vendas;
     limitesDeData();
     $('#loading').classList.add('hidden');
     $('#app').classList.remove('hidden');

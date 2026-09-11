@@ -291,7 +291,7 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
           <div class="plot tall"><canvas id="c-criativo"></canvas></div>
           <div class="tw" style="margin-top:14px">
             <table id="tab-criativo">
-              <thead><tr><th>Criativo</th><th class="n">Gasto</th><th class="n">Impressões</th><th class="n">Cliques</th><th class="n">Checkouts</th><th class="n">Compras (pixel)</th></tr></thead>
+              <thead><tr><th>Criativo</th><th class="n">Compras (pixel)</th><th class="n">CPA</th><th class="n">Investimento</th><th class="n">Cliques</th><th class="n">Checkouts</th><th class="n">Impressões</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -644,13 +644,17 @@ function render(){
   const gmC = agrupar(midia, m => m.anuncio);
   $('#tab-criativo tbody').innerHTML = cri.map(x => {
     const mm = gmC.get(x.k)||[];
+    /* o CPA divide pelo valor bruto do pixel, não pelo arredondado da coluna:
+       0,6 compra arredonda para 1 e baratearia o custo em 40%. */
+    const cpx = soma(mm, m => m.compras_pixel);
     return `<tr>
       <td class="wrap-ok">${esc(x.k)}</td>
+      <td class="n">${Math.round(cpx).toLocaleString('pt-BR')}</td>
+      <td class="n">${esc(nOrDash(div(x.gasto, cpx), brl))}</td>
       <td class="n">${esc(brl(x.gasto))}</td>
-      <td class="n">${soma(mm,m=>m.impressoes).toLocaleString('pt-BR')}</td>
       <td class="n">${soma(mm,m=>m.cliques).toLocaleString('pt-BR')}</td>
       <td class="n">${soma(mm,m=>m.checkouts).toLocaleString('pt-BR')}</td>
-      <td class="n">${Math.round(soma(mm,m=>m.compras_pixel)).toLocaleString('pt-BR')}</td>
+      <td class="n">${soma(mm,m=>m.impressoes).toLocaleString('pt-BR')}</td>
     </tr>`;
   }).join('');
 

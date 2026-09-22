@@ -203,9 +203,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
       <div class="note info"><span class="ic">●</span><div>
         <b>As conversões agora são venda confirmada na Kiwify, não o pixel da Meta.</b>
         Os 4 produtos ODV entram pelo <b>preço cheio</b>, e "atribuída" é a venda que
-        chegou com <code>utm_medium = paid</code>. Atenção ao comparar com mídia: a última
-        campanha na base é de <b>04/09</b> e as vendas começam em <b>15/09</b>, então ainda
-        não há período em comum para calcular ROAS ou custo por venda.</div></div>
+        chegou com <code>utm_medium = paid</code>. <b>Cuidado com o ROAS e o custo por
+        venda:</b> a mídia desta conta vai até <b>04/09</b> e as vendas começam em
+        <b>15/09</b> — como não há dia em comum, eles comparam investimento e venda de
+        períodos diferentes e servem só como referência grosseira até a mídia voltar.</div></div>
       <div class="kpis">
         <div class="kpi hero">
           <span class="lab">Investimento total</span>
@@ -481,8 +482,11 @@ function render(){
   const vendasAtrib = vendasPagas.filter(v => v.origem === 'Pago');
   const fatAtrib    = soma(vendasAtrib, v => v.faturamento);
 
-  /* ---- janela ---- */
-  const todasDatas = midia.map(m=>m.dia).filter(Boolean).sort();
+  /* ---- janela ----
+     Cobre mídia E venda: olhando só a mídia, um recorte com venda e sem campanha
+     (o caso de setembro) se anunciava como "sem dado no período". */
+  const todasDatas = [...midia.map(m=>m.dia), ...vendas.map(v=>v.dia)]
+    .filter(Boolean).map(d=>String(d).slice(0,10)).sort();
   $('#janela-txt').textContent = todasDatas.length
     ? dataBR(todasDatas[0]) + ' → ' + dataBR(todasDatas[todasDatas.length-1])
     : (de || ate) ? `${dataBR(de)} → ${dataBR(ate)} · sem dado no período` : '';
@@ -509,8 +513,16 @@ function render(){
   $('#k-clpv-foot').textContent = lpv.toLocaleString('pt-BR') + ' visitas à página';
   $('#k-cck').textContent  = nOrDash(div(inv, checkouts), brl);
   $('#k-cck-foot').textContent = checkouts.toLocaleString('pt-BR') + ' checkouts iniciados';
-  $('#k-cpa').textContent  = nOrDash(div(inv, vendasAtrib.length), brl);
-  $('#k-cpa-foot').textContent = vendasAtrib.length.toLocaleString('pt-BR') + ' venda(s) atribuída(s)';
+  /* Sem investimento no recorte não existe custo por venda: mostrar R$ 0,00 leria
+     como "venda de graça". */
+  $('#k-cpa').textContent  = nOrDash(inv > 0 ? div(inv, vendasAtrib.length) : null, brl);
+  /* Mesma ressalva do ROAS: sem dia em comum entre gasto e venda, o custo por venda
+     divide coisas de períodos diferentes e sai inflado. */
+  const ultMidiaG  = midia.map(m => String(m.dia).slice(0,10)).sort().pop();
+  const primVendaG = vendasAtrib.map(v => String(v.dia).slice(0,10)).sort()[0];
+  $('#k-cpa-foot').textContent = (ultMidiaG && primVendaG && ultMidiaG < primVendaG)
+    ? `${vendasAtrib.length} venda(s) — períodos sem dia em comum`
+    : vendasAtrib.length.toLocaleString('pt-BR') + ' venda(s) atribuída(s)';
 
   /* ---- funil ---- */
   const custoPor = q => inv > 0 ? div(inv, q) : null;
@@ -578,9 +590,20 @@ function render(){
         <div><span class="lab">ROAS</span><div class="v">${
           esc(nOrDash(roas, r => r.toLocaleString('pt-BR',{maximumFractionDigits:2}) + '×'))}</div></div>
       </div>
-      ${temVenda && !gasto
-        ? '<div class="acao-pend">Venda registrada sem investimento no período — sem ROAS. A mídia desta conta vai só até 04/09.</div>'
-        : (!temVenda ? '<div class="acao-pend">Sem venda da Kiwify neste recorte — as vendas na base começam em 15/09.</div>' : '')}
+      ${(() => {
+        if (temVenda && !gasto)
+          return '<div class="acao-pend">Venda sem investimento no período — sem ROAS. A mídia desta conta vai só até 04/09.</div>';
+        if (!temVenda)
+          return '<div class="acao-pend">Sem venda da Kiwify neste recorte — as vendas na base começam em 15/09.</div>';
+        /* ROAS só é comparável se investimento e venda dividirem algum dia. Aqui não
+           dividem (mídia até 04/09, venda a partir de 15/09), então o número sai mas
+           avisado — senão vira leitura de eficiência que a conta não sustenta. */
+        const ultMidia = mm.map(m => String(m.dia).slice(0,10)).sort().pop();
+        const primVenda = vv.map(v => String(v.dia).slice(0,10)).sort()[0];
+        return (ultMidia && primVenda && ultMidia < primVenda)
+          ? `<div class="acao-pend">ROAS aproximado: o investimento vai até ${esc(dataBR(ultMidia))} e a venda começa em ${esc(dataBR(primVenda))} — períodos sem dia em comum.</div>`
+          : '';
+      })()}
     </div>`;
   }).join('');
 

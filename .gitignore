@@ -1,0 +1,4 @@
+# Exports da Kiwify contêm PII (CPF, e-mail, telefone, endereço, IP) e o repo é
+# compartilhado. Os dados de venda chegam ao dash pela view do Supabase, não por CSV.
+vendas.csv
+*.csv

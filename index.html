@@ -149,6 +149,7 @@ th.n{text-align:right}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:hover td{background:var(--surface2)}
 td.wrap-ok{white-space:normal; min-width:190px}
+tr.tot td{background:var(--surface2); border-top:1px solid var(--border2)}
 
 #loading,#erro{padding:38px 0; text-align:center; color:var(--muted); font-size:14px}
 #erro{color:var(--critical)}
@@ -200,10 +201,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
     <section>
       <div class="sec-head"><h2>Resultado de mídia</h2><span class="hint" id="janela-txt"></span></div>
       <div class="note info"><span class="ic">●</span><div>
-        <b>Os números de venda ainda vêm do pixel da Meta, não da Kiwify.</b> A estrutura
-        das 3 ações (Direct Response · Quiz · Webinário) e dos 3 produtos ODV já está
-        montada — assim que a Kiwify do Matheus entrar na sincronização da B16, ROAS,
-        ticket e faturamento real preenchem sozinhos.</div></div>
+        <b>As vendas da Kiwify entraram na base em 22/09/2026</b> — os 4 produtos ODV já
+        aparecem com faturamento pelo <b>preço cheio</b> do produto. Atenção ao comparar
+        com mídia: a última campanha na base é de <b>04/09</b> e as vendas começam em
+        <b>15/09</b>, então ainda não há período em comum para calcular ROAS.</div></div>
       <div class="kpis">
         <div class="kpi hero">
           <span class="lab">Investimento total</span>
@@ -229,7 +230,17 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
 
     <section>
       <div class="sec-head"><h2>Produtos</h2><span class="hint">Kiwify — venda confirmada</span></div>
-      <div id="produtos-box"></div>
+      <div class="kpis" id="vendas-kpis">
+        <div class="kpi hero">
+          <span class="lab">Faturamento (preço cheio)</span>
+          <div class="val" id="k-fat">—</div>
+          <div class="foot" id="k-fat-foot">—</div>
+        </div>
+        <div class="kpi"><span class="lab">Vendas pagas</span><div class="val sm" id="k-vendas">—</div><div class="foot" id="k-vendas-foot">—</div></div>
+        <div class="kpi"><span class="lab">Ticket médio</span><div class="val sm" id="k-ticket">—</div><div class="foot" id="k-ticket-foot">—</div></div>
+        <div class="kpi"><span class="lab">Repasse líquido</span><div class="val sm" id="k-liq">—</div><div class="foot" id="k-liq-foot">—</div></div>
+      </div>
+      <div id="produtos-box" style="margin-top:14px"></div>
     </section>
 
     <section>
@@ -247,9 +258,10 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
       <div class="sec-head"><h2>Funil de mídia</h2><span class="hint">do impacto ao pixel de compra</span></div>
       <div class="card">
         <h3>Do anúncio ao pixel de compra</h3>
-        <p class="cap">Todas as etapas vêm do pixel da Meta — não há confirmação de venda pela
-        Kiwify ainda, então este número tende a estar acima da venda real (o pixel superestima
-        por conta de compras não atribuídas ao usuário certo, testes, etc.).</p>
+        <p class="cap">Todas as etapas vêm do pixel da Meta e tendem a superestimar (compras
+        não atribuídas ao usuário certo, testes, etc.). A venda confirmada da Kiwify está na
+        seção <b>Produtos</b> — as duas não se sobrepõem no tempo: a mídia desta conta vai até
+        04/09 e as vendas começam em 15/09.</p>
         <div id="funil-box"></div>
       </div>
     </section>
@@ -320,11 +332,15 @@ const V_VENDAS = 'dash_mgodinho_vendas';
    informação (a ação ainda não subiu), diferente de sumir da tela. */
 const ACOES = ['Direct Response', 'Quiz', 'Webinário'];
 
-/* Preço de tabela dos produtos ODV (referência para ticket e break-even). */
+/* Os 4 produtos ODV confirmados pelo cliente em 22/09/2026. O preço aqui é o de
+   tabela (valor cheio); a view entrega `faturamento` já por esse preço, e
+   `faturamento_liquido` guarda o repasse real do Matheus (metade da coprodução,
+   depois da taxa da Kiwify). */
 const PRODUTOS = [
-  { nome:'Onda de Vendas',        preco:297 },
-  { nome:'Lista de Fornecedores', preco:97  },
-  { nome:'Calculadora',           preco:97  },
+  { nome:'Combo ODV',             preco:297 },
+  { nome:'Quiz',                  preco:217 },
+  { nome:'Lista de Fornecedores', preco:57  },
+  { nome:'Calculadora',           preco:47  },
 ];
 
 /* ======================= UTIL ======================= */
@@ -528,9 +544,11 @@ function render(){
 
     const ck = soma(mm, m => m.checkouts);
     const cpx = soma(mm, m => m.compras_pixel);
-    /* ROAS só sai quando há venda confirmada na Kiwify. Com a fonte de vendas
-       ausente, mostrar ROAS do pixel seria inventar faturamento. */
     const temVenda = vv.length > 0;
+    /* ROAS exige venda confirmada E gasto no mesmo recorte. Hoje as duas coisas não
+       se cruzam (mídia até 04/09, vendas a partir de 15/09), então `div` devolve null
+       e o card mostra '—' em vez de dividir por zero. */
+    const roas = temVenda ? div(fat, gasto) : null;
     return `<div class="acao">
       <div class="acao-top"><h3>${esc(acao)}</h3>
         <span class="acao-tag">${mm.length ? esc(pctFino(gasto, inv)) + ' do investimento' : 'sem mídia'}</span></div>
@@ -543,9 +561,11 @@ function render(){
         <div><span class="lab">${temVenda ? 'Faturamento' : 'CPA (pixel)'}</span><div class="v">${
           esc(temVenda ? brlCurto(fat) : nOrDash(div(gasto, cpx), brl))}</div></div>
         <div><span class="lab">ROAS</span><div class="v">${
-          esc(temVenda ? (fat/gasto).toLocaleString('pt-BR',{maximumFractionDigits:2}) + '×' : '—')}</div></div>
+          esc(nOrDash(roas, r => r.toLocaleString('pt-BR',{maximumFractionDigits:2}) + '×'))}</div></div>
       </div>
-      ${temVenda ? '' : '<div class="acao-pend">ROAS e faturamento entram quando a venda da Kiwify for conectada.</div>'}
+      ${temVenda && !gasto
+        ? '<div class="acao-pend">Venda registrada sem investimento no período — sem ROAS. A mídia desta conta vai só até 04/09.</div>'
+        : (!temVenda ? '<div class="acao-pend">Sem venda da Kiwify neste recorte — as vendas na base começam em 15/09.</div>' : '')}
     </div>`;
   }).join('');
 
@@ -572,25 +592,60 @@ function render(){
   const gp = agrupar(vendasPagas, v => v.produto_curto);
   const linhasProd = PRODUTOS.map(p => {
     const vv = gp.get(p.nome) || [];
-    return { ...p, n:vv.length, fat: soma(vv, v => v.faturamento) };
+    return { ...p, n:vv.length,
+             fat: soma(vv, v => v.faturamento),
+             liq: soma(vv, v => v.faturamento_liquido) };
   });
-  const temAlgumaVenda = linhasProd.some(p => p.n > 0);
+  const totProd = {
+    n:   soma(linhasProd, p => p.n),
+    fat: soma(linhasProd, p => p.fat),
+    liq: soma(linhasProd, p => p.liq),
+  };
+  const temAlgumaVenda = totProd.n > 0;
+
+  /* KPIs de venda real — ficam fora do recorte por ação de propósito: a Calculadora e
+     a Lista de Fornecedores entram como order bump e não pertencem a uma frente só,
+     então some do bloco "Por ação" mas conta aqui. */
+  const pendentes = vendas.filter(v => v.status === 'waiting_payment');
+  $('#k-fat').textContent    = brl(totProd.fat);
+  $('#k-fat-foot').textContent = temAlgumaVenda
+    ? 'soma do preço de tabela dos produtos vendidos' : 'nenhuma venda paga no período';
+  $('#k-vendas').textContent = totProd.n.toLocaleString('pt-BR');
+  $('#k-vendas-foot').textContent = pendentes.length
+    ? `+ ${pendentes.length} aguardando pagamento` : 'somente status pago';
+  $('#k-ticket').textContent = nOrDash(div(totProd.fat, totProd.n), brl);
+  $('#k-ticket-foot').textContent = 'faturamento ÷ vendas pagas';
+  $('#k-liq').textContent    = brl(totProd.liq);
+  $('#k-liq-foot').textContent = 'metade da coprodução, após taxa da Kiwify';
+
   $('#produtos-box').innerHTML = temAlgumaVenda
     ? `<div class="tw"><table>
-        <thead><tr><th>Produto</th><th class="n">Preço</th><th class="n">Vendas</th><th class="n">Faturamento</th><th class="n">Ticket médio</th></tr></thead>
+        <thead><tr><th>Produto</th><th class="n">Preço</th><th class="n">Vendas</th><th class="n">Faturamento</th><th class="n">Ticket médio</th><th class="n">Repasse líquido</th></tr></thead>
         <tbody>${linhasProd.map(p => `<tr>
           <td class="wrap-ok">${esc(p.nome)}</td>
           <td class="n">${esc(brl(p.preco))}</td>
           <td class="n">${p.n.toLocaleString('pt-BR')}</td>
           <td class="n">${esc(brl(p.fat))}</td>
           <td class="n">${esc(nOrDash(div(p.fat, p.n), brl))}</td>
-        </tr>`).join('')}</tbody></table></div>`
+          <td class="n">${esc(brl(p.liq))}</td>
+        </tr>`).join('')}
+        <tr class="tot">
+          <td><b>Total</b></td>
+          <td class="n">—</td>
+          <td class="n"><b>${totProd.n.toLocaleString('pt-BR')}</b></td>
+          <td class="n"><b>${esc(brl(totProd.fat))}</b></td>
+          <td class="n">${esc(nOrDash(div(totProd.fat, totProd.n), brl))}</td>
+          <td class="n"><b>${esc(brl(totProd.liq))}</b></td>
+        </tr></tbody></table></div>
+       <div class="hint" style="margin-top:8px">
+         <b>Faturamento</b> é o preço cheio do produto. <b>Repasse líquido</b> é o que
+         entra para o Matheus — metade da coprodução, já descontada a taxa da Kiwify.
+       </div>`
     : `<div class="note warn"><span class="ic">▲</span><div>
-        <b>Nenhuma venda dos produtos ODV chegou à base ainda.</b> Os 3 produtos
-        (Onda de Vendas R$ 297 · Lista de Fornecedores R$ 97 · Calculadora R$ 97)
-        estão mapeados e a consulta já está pronta — falta a Kiwify do Matheus entrar
-        na sincronização da B16. Enquanto isso, os números de compra nesta página vêm
-        do pixel da Meta e tendem a superestimar.</div></div>`;
+        <b>Nenhuma venda dos produtos ODV no período selecionado.</b> Os 4 produtos
+        (Combo ODV R$ 297 · Quiz R$ 217 · Lista de Fornecedores R$ 57 ·
+        Calculadora R$ 47) estão mapeados e a consulta está ativa — as vendas na base
+        começam em 15/09/2026. Amplie o período para vê-las.</div></div>`;
 
   /* ---- evolução ---- */
   const gastoDia = agrupar(midia, m => m.dia);
@@ -664,7 +719,10 @@ function render(){
 
 /* ======================= FILTRO DE PERÍODO ======================= */
 function limitesDeData(){
-  const datas = MIDIA.map(m=>m.dia).filter(Boolean).map(d=>String(d).slice(0,10)).sort();
+  /* O intervalo cobre mídia E vendas. Usar só a mídia deixaria o período padrão em
+     04/09 (último dia de campanha) e esconderia todas as vendas, que começam em 15/09. */
+  const datas = [...MIDIA.map(m=>m.dia), ...VENDAS.map(v=>v.dia)]
+    .filter(Boolean).map(d=>String(d).slice(0,10)).sort();
   if (!datas.length) return;
   const [ini, fim] = [datas[0], datas[datas.length-1]];
   ['#dt-de','#dt-ate'].forEach(s => { const el = $(s); el.min = ini; el.max = fim; });
@@ -677,8 +735,8 @@ async function boot(){
   $('#loading').classList.remove('hidden');
   $('#erro').classList.add('hidden');
   try {
-    /* A view de vendas hoje volta vazia (Kiwify do Matheus ainda não sincroniza).
-       Falha nela não pode derrubar o dashboard de mídia, que é o que está no ar. */
+    /* Falha na view de vendas não pode derrubar o dashboard de mídia, que é a parte
+       com histórico mais longo. */
     const [midia, vendas] = await Promise.all([
       sb(V_MIDIA, 'select=*&order=dia.asc&limit=5000'),
       sb(V_VENDAS, 'select=*&order=dia.asc&limit=5000').catch(e => { console.warn('vendas:', e.message); return []; }),

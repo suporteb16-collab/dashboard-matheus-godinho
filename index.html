@@ -201,10 +201,11 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
     <section>
       <div class="sec-head"><h2>Resultado de mídia</h2><span class="hint" id="janela-txt"></span></div>
       <div class="note info"><span class="ic">●</span><div>
-        <b>As vendas da Kiwify entraram na base em 22/09/2026</b> — os 4 produtos ODV já
-        aparecem com faturamento pelo <b>preço cheio</b> do produto. Atenção ao comparar
-        com mídia: a última campanha na base é de <b>04/09</b> e as vendas começam em
-        <b>15/09</b>, então ainda não há período em comum para calcular ROAS.</div></div>
+        <b>As conversões agora são venda confirmada na Kiwify, não o pixel da Meta.</b>
+        Os 4 produtos ODV entram pelo <b>preço cheio</b>, e "atribuída" é a venda que
+        chegou com <code>utm_medium = paid</code>. Atenção ao comparar com mídia: a última
+        campanha na base é de <b>04/09</b> e as vendas começam em <b>15/09</b>, então ainda
+        não há período em comum para calcular ROAS ou custo por venda.</div></div>
       <div class="kpis">
         <div class="kpi hero">
           <span class="lab">Investimento total</span>
@@ -213,8 +214,8 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
         </div>
         <div class="kpi"><span class="lab">Impressões</span><div class="val sm" id="k-imp">—</div><div class="foot" id="k-imp-foot">—</div></div>
         <div class="kpi"><span class="lab">Cliques no link</span><div class="val sm" id="k-clk">—</div><div class="foot" id="k-clk-foot">—</div></div>
-        <div class="kpi"><span class="lab">Compras (pixel)</span><div class="val sm" id="k-compras">—</div><div class="foot" id="k-compras-foot">—</div></div>
-        <div class="kpi"><span class="lab">Faturamento (pixel)</span><div class="val sm" id="k-fatpixel">—</div><div class="foot" id="k-fatpixel-foot">—</div></div>
+        <div class="kpi"><span class="lab">Vendas atribuídas</span><div class="val sm" id="k-compras">—</div><div class="foot" id="k-compras-foot">—</div></div>
+        <div class="kpi"><span class="lab">Faturamento atribuído</span><div class="val sm" id="k-fatpixel">—</div><div class="foot" id="k-fatpixel-foot">—</div></div>
       </div>
     </section>
 
@@ -250,18 +251,18 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
         <div class="kpi"><span class="lab">CPC</span><div class="val sm" id="k-cpc">—</div><div class="foot" id="k-cpc-foot">—</div></div>
         <div class="kpi"><span class="lab">Custo por LPV</span><div class="val sm" id="k-clpv">—</div><div class="foot" id="k-clpv-foot">—</div></div>
         <div class="kpi"><span class="lab">Custo por checkout</span><div class="val sm" id="k-cck">—</div><div class="foot" id="k-cck-foot">—</div></div>
-        <div class="kpi"><span class="lab">Custo por compra (pixel)</span><div class="val sm" id="k-cpa">—</div><div class="foot" id="k-cpa-foot">—</div></div>
+        <div class="kpi"><span class="lab">Custo por venda</span><div class="val sm" id="k-cpa">—</div><div class="foot" id="k-cpa-foot">—</div></div>
       </div>
     </section>
 
     <section>
-      <div class="sec-head"><h2>Funil de mídia</h2><span class="hint">do impacto ao pixel de compra</span></div>
+      <div class="sec-head"><h2>Funil de mídia</h2><span class="hint">do impacto à venda confirmada</span></div>
       <div class="card">
-        <h3>Do anúncio ao pixel de compra</h3>
-        <p class="cap">Todas as etapas vêm do pixel da Meta e tendem a superestimar (compras
-        não atribuídas ao usuário certo, testes, etc.). A venda confirmada da Kiwify está na
-        seção <b>Produtos</b> — as duas não se sobrepõem no tempo: a mídia desta conta vai até
-        04/09 e as vendas começam em 15/09.</p>
+        <h3>Do anúncio à venda</h3>
+        <p class="cap">As etapas de mídia (impressão, clique, visita, checkout) vêm da Meta.
+        A última etapa é <b>venda confirmada na Kiwify</b>, não o pixel. Hoje as duas pontas
+        não se cruzam no tempo — a mídia desta conta vai até 04/09 e as vendas começam em
+        15/09 —, então o funil só fecha de ponta a ponta quando a mídia voltar a rodar.</p>
         <div id="funil-box"></div>
       </div>
     </section>
@@ -299,11 +300,14 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
       <div class="grid" style="margin-top:14px">
         <div class="card">
           <h3>Criativos</h3>
-          <p class="cap">Ordenado por gasto. Detalhe completo na tabela abaixo.</p>
+          <p class="cap">Ordenado por gasto. Esta é a única tabela que ainda usa o pixel:
+          a venda da Kiwify identifica o anúncio por ID numérico e a base de mídia só traz
+          o nome do criativo, então não há como casar venda com criativo. Use estes números
+          para comparar criativos entre si, não como venda real.</p>
           <div class="plot tall"><canvas id="c-criativo"></canvas></div>
           <div class="tw" style="margin-top:14px">
             <table id="tab-criativo">
-              <thead><tr><th>Criativo</th><th class="n">Compras (pixel)</th><th class="n">CPA</th><th class="n">Investimento</th><th class="n">Cliques</th><th class="n">Checkouts</th><th class="n">Impressões</th></tr></thead>
+              <thead><tr><th>Criativo</th><th class="n">Compras (pixel)</th><th class="n">CPA (pixel)</th><th class="n">Investimento</th><th class="n">Cliques</th><th class="n">Checkouts</th><th class="n">Impressões</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
@@ -463,8 +467,19 @@ function render(){
   const cliques   = soma(midia, m => m.cliques);
   const lpv       = soma(midia, m => m.lpv);
   const checkouts = soma(midia, m => m.checkouts);
+  /* Sobrevive só como contraponto no rodapé do KPI de vendas ("o pixel reportou N")
+     e na tabela de criativos. A receita do pixel saiu de vez: o faturamento agora é
+     o da Kiwify. */
   const comprasPixel = soma(midia, m => m.compras_pixel);
-  const fatPixel  = soma(midia, m => m.receita_pixel);
+
+  /* ---- vendas (Kiwify) ----
+     Fonte de verdade das conversões desde 22/09/2026. `origem = 'Pago'` vem da
+     utm_medium da própria venda, então é a venda que a mídia realmente trouxe —
+     é o que substitui o pixel nos KPIs e no funil. */
+  const vendas = (de||ate) ? VENDAS.filter(v => dentro(v.dia)) : VENDAS;
+  const vendasPagas = vendas.filter(v => v.status === 'paid');
+  const vendasAtrib = vendasPagas.filter(v => v.origem === 'Pago');
+  const fatAtrib    = soma(vendasAtrib, v => v.faturamento);
 
   /* ---- janela ---- */
   const todasDatas = midia.map(m=>m.dia).filter(Boolean).sort();
@@ -479,10 +494,12 @@ function render(){
   $('#k-imp-foot').textContent = 'no período';
   $('#k-clk').textContent = cliques.toLocaleString('pt-BR');
   $('#k-clk-foot').textContent = `CTR ${pctFino(cliques, imps)}`;
-  $('#k-compras').textContent = Math.round(comprasPixel).toLocaleString('pt-BR');
-  $('#k-compras-foot').textContent = 'reportado pelo pixel — sem confirmação de venda';
-  $('#k-fatpixel').textContent = brl(fatPixel);
-  $('#k-fatpixel-foot').textContent = 'valor de conversão do pixel, não faturamento real';
+  $('#k-compras').textContent = vendasAtrib.length.toLocaleString('pt-BR');
+  $('#k-compras-foot').textContent = comprasPixel
+    ? `o pixel reportou ${Math.round(comprasPixel).toLocaleString('pt-BR')}`
+    : 'venda confirmada na Kiwify';
+  $('#k-fatpixel').textContent = brl(fatAtrib);
+  $('#k-fatpixel-foot').textContent = 'preço cheio, venda confirmada';
 
   $('#k-cpm').textContent  = nOrDash(inv > 0 ? div(inv*1000, imps) : null, brl);
   $('#k-cpm-foot').textContent = imps.toLocaleString('pt-BR') + ' impressões';
@@ -492,8 +509,8 @@ function render(){
   $('#k-clpv-foot').textContent = lpv.toLocaleString('pt-BR') + ' visitas à página';
   $('#k-cck').textContent  = nOrDash(div(inv, checkouts), brl);
   $('#k-cck-foot').textContent = checkouts.toLocaleString('pt-BR') + ' checkouts iniciados';
-  $('#k-cpa').textContent  = nOrDash(div(inv, comprasPixel), brl);
-  $('#k-cpa-foot').textContent = Math.round(comprasPixel).toLocaleString('pt-BR') + ' compra(s) pelo pixel';
+  $('#k-cpa').textContent  = nOrDash(div(inv, vendasAtrib.length), brl);
+  $('#k-cpa-foot').textContent = vendasAtrib.length.toLocaleString('pt-BR') + ' venda(s) atribuída(s)';
 
   /* ---- funil ---- */
   const custoPor = q => inv > 0 ? div(inv, q) : null;
@@ -502,8 +519,12 @@ function render(){
     ['Cliques',           cliques,   custoPor(cliques),   'CPC'],
     ['Visitas à página',  lpv,       custoPor(lpv),       'Custo por LPV'],
     ['Checkout iniciado', checkouts, custoPor(checkouts), 'Custo por checkout'],
-    ['Compra (pixel)',    Math.round(comprasPixel), custoPor(comprasPixel), 'Custo por compra'],
   ].filter(e => e[1] != null && e[1] > 0);
+  /* A venda fecha o funil mesmo zerada — diferente das etapas de mídia, um zero aqui
+     é resultado ("o checkout não converteu"), não ausência de dado. Só some se não
+     houver nenhuma etapa de mídia acima para comparar. */
+  if (etapas.length) etapas.push(
+    ['Venda (Kiwify)', vendasAtrib.length, custoPor(vendasAtrib.length), 'Custo por venda']);
 
   const larg = i => etapas.length < 2 ? 100 : 100 - 72 * (i / (etapas.length - 1));
   $('#funil-box').innerHTML = '<div class="funil">' + etapas.map((e, i) => {
@@ -526,9 +547,6 @@ function render(){
   }).join('') + '</div>';
 
   /* ---- por ação ---- */
-  const vendas = (de||ate) ? VENDAS.filter(v => dentro(v.dia)) : VENDAS;
-  const vendasPagas = vendas.filter(v => v.status === 'paid');
-
   $('#acoes-box').innerHTML = ACOES.map(acao => {
     const mm = midia.filter(m => m.acao === acao);
     const gasto = soma(mm, m => m.gasto);
@@ -543,7 +561,6 @@ function render(){
     }
 
     const ck = soma(mm, m => m.checkouts);
-    const cpx = soma(mm, m => m.compras_pixel);
     const temVenda = vv.length > 0;
     /* ROAS exige venda confirmada E gasto no mesmo recorte. Hoje as duas coisas não
        se cruzam (mídia até 04/09, vendas a partir de 15/09), então `div` devolve null
@@ -556,10 +573,8 @@ function render(){
         <div><span class="lab">Investido</span><div class="v">${esc(brlCurto(gasto))}</div></div>
         <div><span class="lab">Cliques</span><div class="v">${soma(mm,m=>m.cliques).toLocaleString('pt-BR')}</div></div>
         <div><span class="lab">Checkouts</span><div class="v">${ck.toLocaleString('pt-BR')}</div></div>
-        <div><span class="lab">${temVenda ? 'Vendas' : 'Compras (pixel)'}</span><div class="v">${
-          temVenda ? vv.length.toLocaleString('pt-BR') : Math.round(cpx).toLocaleString('pt-BR')}</div></div>
-        <div><span class="lab">${temVenda ? 'Faturamento' : 'CPA (pixel)'}</span><div class="v">${
-          esc(temVenda ? brlCurto(fat) : nOrDash(div(gasto, cpx), brl))}</div></div>
+        <div><span class="lab">Vendas</span><div class="v">${vv.length.toLocaleString('pt-BR')}</div></div>
+        <div><span class="lab">Faturamento</span><div class="v">${esc(brlCurto(fat))}</div></div>
         <div><span class="lab">ROAS</span><div class="v">${
           esc(nOrDash(roas, r => r.toLocaleString('pt-BR',{maximumFractionDigits:2}) + '×'))}</div></div>
       </div>
@@ -699,8 +714,11 @@ function render(){
   const gmC = agrupar(midia, m => m.anuncio);
   $('#tab-criativo tbody').innerHTML = cri.map(x => {
     const mm = gmC.get(x.k)||[];
-    /* o CPA divide pelo valor bruto do pixel, não pelo arredondado da coluna:
-       0,6 compra arredonda para 1 e baratearia o custo em 40%. */
+    /* Único lugar que ainda usa o pixel: a venda da Kiwify traz o ID numérico do
+       anúncio em `conteudo`, mas a view de mídia expõe o anúncio só por nome — não há
+       chave para casar criativo × venda. Por isso a coluna fica marcada como pixel.
+       O CPA divide pelo valor bruto, não pelo arredondado: 0,6 compra vira 1 e
+       baratearia o custo em 40%. */
     const cpx = soma(mm, m => m.compras_pixel);
     return `<tr>
       <td class="wrap-ok">${esc(x.k)}</td>

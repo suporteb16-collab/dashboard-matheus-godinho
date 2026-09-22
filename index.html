@@ -96,8 +96,42 @@ html.dark .kpi.hero .lab{color:var(--muted)}
 html.dark .kpi.hero .val{color:var(--black)}
 html.dark .kpi.hero .foot{color:var(--muted)}
 
-.grid{display:grid; gap:14px}
-.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+/* Ícone de ajuda — abre por clique/toque (não só hover, que não existe em touch).
+   O balão é position:fixed e posicionado por JS: dentro de um .kpi com overflow e
+   containment, um absolute seria cortado nas bordas da tela no mobile. */
+.hlp{appearance:none; border:1px solid var(--border2); background:var(--surface2); color:var(--muted);
+     font:inherit; font-size:11px; font-weight:700; line-height:1; width:17px; height:17px; border-radius:50%;
+     display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+     vertical-align:middle; margin-left:7px; flex:none; transition:background .12s, color .12s}
+.hlp:hover,.hlp[aria-expanded="true"]{background:var(--black); border-color:var(--black); color:var(--surface)}
+.hlp:focus-visible{outline:2px solid var(--cat2); outline-offset:2px}
+.kpi.hero .hlp{background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.85)}
+.kpi.hero .hlp:hover,.kpi.hero .hlp[aria-expanded="true"]{background:#fff; border-color:#fff; color:var(--black)}
+html.dark .kpi.hero .hlp{background:var(--surface); border-color:var(--border2); color:var(--muted)}
+/* o label é flex para o ícone não quebrar linha sozinho */
+.kpi .lab{display:flex; align-items:center}
+
+.hbox{position:fixed; z-index:60; max-width:min(300px, calc(100vw - 24px)); background:var(--surface);
+      color:var(--text); border:1px solid var(--border2); border-radius:9px; padding:11px 13px;
+      font-size:12.5px; line-height:1.45; box-shadow:0 8px 26px rgba(0,0,0,.16); display:none}
+.hbox.on{display:block}
+.hbox b{color:var(--black); font-weight:600}
+.hbox .hb-num{font-variant-numeric:tabular-nums; font-weight:600; color:var(--black)}
+.hbox .hb-row{display:flex; justify-content:space-between; gap:14px; margin-top:5px}
+.hbox .hb-sep{border-top:1px solid var(--border); margin:8px 0 0; padding-top:7px; color:var(--muted)}
+.hbox code{font-family:ui-monospace,Menlo,monospace; font-size:11.5px; background:var(--surface2);
+           border:1px solid var(--border); border-radius:4px; padding:1px 4px; white-space:nowrap}
+
+@media (max-width:520px){
+  .ftrap{height:52px; padding:0 13px; gap:8px}
+  .ft-val{font-size:23px} .ft-cost{font-size:18px}
+  .ft-cost-lbl,.ft-name{font-size:9px}
+  /* alvo de toque maior no mobile */
+  .hlp{width:21px; height:21px; font-size:12px}
+}
+/* min() evita que a coluna fique mais larga que a tela em aparelhos de 320px —
+   com minmax(330px) fixo, a página inteira ganhava scroll horizontal. */
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(330px,100%),1fr))}
 .card{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px 14px; box-shadow:var(--shadow)}
 .card h3{font-size:14px; font-weight:500; margin:0 0 3px; color:var(--black)}
 .card .cap{font-size:12.5px; color:var(--muted); margin:0 0 14px}
@@ -121,12 +155,6 @@ html.dark .kpi.hero .foot{color:var(--muted)}
 .fc-line{width:2px; height:11px; background:var(--border2)}
 .fc-tag{background:var(--surface2); border:1px solid var(--border2); color:var(--text); font-size:10.5px;
         font-weight:500; padding:3px 11px; border-radius:20px; white-space:nowrap}
-@media (max-width:520px){
-  .ftrap{height:52px; padding:0 13px; gap:8px}
-  .ft-val{font-size:23px} .ft-cost{font-size:18px}
-  .ft-cost-lbl,.ft-name{font-size:9px}
-}
-
 /* Card de ação — um por frente (DR / Quiz / Webinário). A ação sem dado fica
    visível e apagada: o vazio é informação (não subiu ainda), não um erro. */
 .acao{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:15px 17px 14px; box-shadow:var(--shadow)}
@@ -155,7 +183,19 @@ tr.tot td{background:var(--surface2); border-top:1px solid var(--border2)}
 #erro{color:var(--critical)}
 .hidden{display:none !important}
 footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); font-size:12.5px; color:var(--muted); display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between}
-@media (max-width:640px){ .plot{height:225px} .kpi .val{font-size:25px} .kpi.hero .val{font-size:32px} }
+@media (max-width:640px){
+  .plot{height:225px} .kpi .val{font-size:25px} .kpi.hero .val{font-size:32px}
+  /* 2 KPIs por linha em vez de 1: com minmax(172px) a coluna única deixava a faixa
+     de KPIs muito alta e empurrava o resto da página para baixo. */
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px}
+  .kpi{padding:13px 13px 12px}
+  .kpi .val.sm{font-size:19px}
+  .kpi .foot{font-size:11.5px}
+  /* a tabela de produtos ganhou a 6ª coluna; aperta o padding para caber mais */
+  th,td{padding:8px 10px}
+  table{font-size:12.5px}
+  .sec-head{flex-wrap:wrap; gap:4px}
+}
 </style>
 </head>
 <body>
@@ -215,8 +255,8 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
         </div>
         <div class="kpi"><span class="lab">Impressões</span><div class="val sm" id="k-imp">—</div><div class="foot" id="k-imp-foot">—</div></div>
         <div class="kpi"><span class="lab">Cliques no link</span><div class="val sm" id="k-clk">—</div><div class="foot" id="k-clk-foot">—</div></div>
-        <div class="kpi"><span class="lab">Vendas atribuídas</span><div class="val sm" id="k-compras">—</div><div class="foot" id="k-compras-foot">—</div></div>
-        <div class="kpi"><span class="lab">Faturamento atribuído</span><div class="val sm" id="k-fatpixel">—</div><div class="foot" id="k-fatpixel-foot">—</div></div>
+        <div class="kpi"><span class="lab">Vendas atribuídas<button class="hlp" type="button" data-hlp="atrib-n" aria-label="O que são vendas atribuídas" aria-expanded="false">?</button></span><div class="val sm" id="k-compras">—</div><div class="foot" id="k-compras-foot">—</div></div>
+        <div class="kpi"><span class="lab">Faturamento atribuído<button class="hlp" type="button" data-hlp="atrib-fat" aria-label="O que é faturamento atribuído" aria-expanded="false">?</button></span><div class="val sm" id="k-fatpixel">—</div><div class="foot" id="k-fatpixel-foot">—</div></div>
       </div>
     </section>
 
@@ -234,13 +274,13 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
       <div class="sec-head"><h2>Produtos</h2><span class="hint">Kiwify — venda confirmada</span></div>
       <div class="kpis" id="vendas-kpis">
         <div class="kpi hero">
-          <span class="lab">Faturamento (preço cheio)</span>
+          <span class="lab">Faturamento (preço cheio)<button class="hlp" type="button" data-hlp="fat-total" aria-label="O que é faturamento total" aria-expanded="false">?</button></span>
           <div class="val" id="k-fat">—</div>
           <div class="foot" id="k-fat-foot">—</div>
         </div>
         <div class="kpi"><span class="lab">Vendas pagas</span><div class="val sm" id="k-vendas">—</div><div class="foot" id="k-vendas-foot">—</div></div>
         <div class="kpi"><span class="lab">Ticket médio</span><div class="val sm" id="k-ticket">—</div><div class="foot" id="k-ticket-foot">—</div></div>
-        <div class="kpi"><span class="lab">Repasse líquido</span><div class="val sm" id="k-liq">—</div><div class="foot" id="k-liq-foot">—</div></div>
+        <div class="kpi"><span class="lab">Repasse líquido<button class="hlp" type="button" data-hlp="liq" aria-label="O que é repasse líquido" aria-expanded="false">?</button></span><div class="val sm" id="k-liq">—</div><div class="foot" id="k-liq-foot">—</div></div>
       </div>
       <div id="produtos-box" style="margin-top:14px"></div>
     </section>
@@ -322,6 +362,8 @@ footer{margin-top:44px; padding-top:16px; border-top:1px solid var(--border); fo
     </footer>
   </main>
 </div>
+
+<div id="hbox" class="hbox" role="dialog" aria-live="polite"></div>
 
 <script>
 'use strict';
@@ -441,6 +483,8 @@ const barra = { borderRadius:4, borderSkipped:false, borderWidth:2, maxBarThickn
 
 /* ======================= RENDER ======================= */
 let MIDIA = [], VENDAS = [];
+/* Conteúdo dos balões de ajuda, reescrito a cada render() com os números do recorte. */
+const AJUDA = {};
 
 function render(){
   const seg = ($('.seg button[aria-pressed="true"]')||{}).dataset?.range || 'all';
@@ -481,6 +525,44 @@ function render(){
   const vendasPagas = vendas.filter(v => v.status === 'paid');
   const vendasAtrib = vendasPagas.filter(v => v.origem === 'Pago');
   const fatAtrib    = soma(vendasAtrib, v => v.faturamento);
+  const vendasOrg   = vendasPagas.filter(v => v.origem !== 'Pago');
+  const fatOrg      = soma(vendasOrg, v => v.faturamento);
+  const fatTotal    = soma(vendasPagas, v => v.faturamento);
+  const liqTotal    = soma(vendasPagas, v => v.faturamento_liquido);
+
+  /* Textos dos ícones de ajuda. Montados aqui, com os números do recorte atual, para
+     a explicação mostrar a conta real ("401 + 745 = 1.146") em vez de texto genérico —
+     é a diferença entre os dois faturamentos que confunde na leitura. */
+  const linha = (rot, val) => `<div class="hb-row"><span>${rot}</span><span class="hb-num">${esc(val)}</span></div>`;
+  AJUDA['atrib-fat'] = `<b>Só a venda que veio de anúncio.</b>
+    Soma do preço cheio das vendas pagas que chegaram com <code>utm_medium = paid</code>.`
+    + linha('De mídia paga', brl(fatAtrib))
+    + linha('Orgânico / bio', brl(fatOrg))
+    + linha('<b>Faturamento total</b>', brl(fatTotal))
+    + `<div class="hb-sep">Por isso é menor que o da seção <b>Produtos</b>: lá entra toda
+       venda, aqui só a que a mídia trouxe.</div>`;
+  AJUDA['atrib-n'] = `<b>Vendas confirmadas vindas de anúncio.</b>
+    Venda paga na Kiwify com <code>utm_medium = paid</code> — não é o pixel da Meta,
+    que estima e costuma contar a mais.`
+    + linha('De mídia paga', vendasAtrib.length)
+    + linha('Orgânico / bio', vendasOrg.length)
+    + linha('<b>Total pago</b>', vendasPagas.length)
+    + (comprasPixel ? `<div class="hb-sep">O pixel da Meta reportou
+        <span class="hb-num">${Math.round(comprasPixel).toLocaleString('pt-BR')}</span> compras no mesmo
+        período — a diferença é o que o pixel superestima.</div>` : '');
+  AJUDA['fat-total'] = `<b>Toda venda paga, pelo preço de tabela.</b>
+    Inclui mídia paga e orgânico.`
+    + linha('De mídia paga', brl(fatAtrib))
+    + linha('Orgânico / bio', brl(fatOrg))
+    + linha('<b>Total</b>', brl(fatTotal))
+    + `<div class="hb-sep">O <b>Faturamento atribuído</b>, lá em cima, mostra só a parte
+       de mídia paga (${esc(brl(fatAtrib))}).</div>`;
+  AJUDA['liq'] = `<b>O que entra na conta do Matheus.</b>
+    Os produtos são coprodução: a Kiwify desconta a taxa e divide o resto meio a meio.`
+    + linha('Preço cheio', brl(fatTotal))
+    + linha('Repasse líquido', brl(liqTotal))
+    + `<div class="hb-sep">Ex.: Quiz de R$ 217 → R$ 12,25 de taxa → R$ 102,37 para cada lado.
+       O dash usa o preço cheio no faturamento porque é o que se compara com o gasto de mídia.</div>`;
 
   /* ---- janela ----
      Cobre mídia E venda: olhando só a mídia, um recorte com venda e sem campanha
@@ -793,6 +875,64 @@ async function boot(){
     $('#erro').textContent = 'Não consegui carregar: ' + e.message;
   }
 }
+
+/* ======================= AJUDA (ícone "?") =======================
+   Abre por clique/toque — hover sozinho não existe em touch. No desktop o hover
+   também abre, mas o clique é o que mantém aberto. */
+const hbox = $('#hbox');
+let hlpAtivo = null;
+
+function fecharAjuda(){
+  hbox.classList.remove('on');
+  if (hlpAtivo) hlpAtivo.setAttribute('aria-expanded','false');
+  hlpAtivo = null;
+}
+
+function abrirAjuda(btn){
+  const txt = AJUDA[btn.dataset.hlp];
+  if (!txt) return;
+  hbox.innerHTML = txt;
+  hbox.classList.add('on');
+  if (hlpAtivo && hlpAtivo !== btn) hlpAtivo.setAttribute('aria-expanded','false');
+  hlpAtivo = btn; btn.setAttribute('aria-expanded','true');
+
+  /* Posiciona preso ao ícone, mas sempre dentro da viewport: no mobile o balão
+     nasceria cortado à direita ou embaixo. Mede depois de exibir, senão a altura
+     vem zerada. */
+  const r = btn.getBoundingClientRect();
+  const b = hbox.getBoundingClientRect();
+  const m = 12;
+  let left = r.left + r.width/2 - b.width/2;
+  left = Math.max(m, Math.min(left, window.innerWidth - b.width - m));
+  let top = r.bottom + 8;
+  if (top + b.height > window.innerHeight - m) {
+    const acima = r.top - b.height - 8;
+    top = acima >= m ? acima : Math.max(m, window.innerHeight - b.height - m);
+  }
+  hbox.style.left = Math.round(left) + 'px';
+  hbox.style.top  = Math.round(top)  + 'px';
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest?.('.hlp');
+  if (btn){
+    e.stopPropagation();
+    (hlpAtivo === btn) ? fecharAjuda() : abrirAjuda(btn);
+    return;
+  }
+  if (!e.target.closest?.('#hbox')) fecharAjuda();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharAjuda(); });
+/* Só no desktop: em touch o hover dispara junto com o clique e causa piscada. */
+if (window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+  document.addEventListener('mouseover', e => {
+    const btn = e.target.closest?.('.hlp');
+    if (btn && btn !== hlpAtivo) abrirAjuda(btn);
+  });
+}
+/* Reposicionar é mais barato e menos surpreendente que seguir o scroll. */
+window.addEventListener('scroll', fecharAjuda, { passive:true });
+window.addEventListener('resize', fecharAjuda);
 
 $('#btn-refresh').addEventListener('click', boot);
 $$('.seg button').forEach(b => b.addEventListener('click', () => {
